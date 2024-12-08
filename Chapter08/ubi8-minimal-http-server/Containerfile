@@ -1,0 +1,20 @@
+# Based on the UBI8 Minimal image
+
+
+FROM registry.access.redhat.com/ubi8-minimal
+ 
+# Upgrade and install Python 3.6
+RUN microdnf upgrade && microdnf install python3
+ 
+# Copy source code
+COPY entrypoint.sh http_server.py /
+ 
+# Expose the default httpd port 80
+EXPOSE 8080
+
+
+# Configure the container entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+ 
+# Run the httpd
+CMD ["/usr/bin/python3", "-u", "/http_server.py"]
