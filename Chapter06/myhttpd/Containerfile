@@ -1,0 +1,37 @@
+FROM docker.io/library/fedora 
+
+# Install required packages 
+RUN set -euo pipefail; \
+    dnf upgrade -y && \
+    dnf install httpd -y && \
+    dnf clean all -y && \
+    rm -rf /var/cache/dnf/* 
+
+# Custom webserver configs for rootless execution 
+RUN set -euo pipefail; \ 
+    sed -i 's|Listen 80|Listen 8080|' \ 
+           /etc/httpd/conf/httpd.conf; \ 
+    sed -i 's|ErrorLog "logs/error_log"|ErrorLog /dev/stderr|' \ 
+           /etc/httpd/conf/httpd.conf; \ 
+    sed -i 's|CustomLog "logs/access_log" combined|CustomLog /dev/stdout combined|' \ 
+           /etc/httpd/conf/httpd.conf; \ 
+    chown 1001 /var/run/httpd 
+
+# Copy web content 
+COPY index.html /var/www/html 
+
+# Define content volume 
+VOLUME /var/www/html 
+
+# Copy container entrypoint.sh script 
+COPY entrypoint.sh /entrypoint.sh 
+
+# Declare exposed ports 
+EXPOSE 8080 
+
+# Declare default user 
+USER 1001 
+
+ENTRYPOINT ["/entrypoint.sh"] 
+
+CMD ["httpd"] 
